@@ -9,7 +9,7 @@ This is a helper package that starts the [pyproject](https://github.com/terror/p
 
 ## Applicable files
 
-This language server operates on views with the `source.ini` base scope but only those that have `pyproject.toml` file name.
+This language server operates on views with the `source.toml` base scope but only those that have `pyproject.toml` file name.
 
 ## Configuration
 
