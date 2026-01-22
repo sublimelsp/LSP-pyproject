@@ -1,0 +1,6 @@
+{
+	"selector": "source.ini",
+	"command": [
+		"${storage_path}/LSP-pyproject/pyproject", "server"
+	],
+}
