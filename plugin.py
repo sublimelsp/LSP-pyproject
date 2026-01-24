@@ -28,6 +28,7 @@ ARTIFACT_PLATFORM_MAPPING = {
     'linux': 'unknown-linux-gnu',
 }
 
+
 def get_artifact_name() -> str:
     sublime_arch = sublime.arch()
     arch = ARTIFACT_ARCH_MAPPING[sublime_arch]
