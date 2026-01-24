@@ -1,0 +1,6 @@
+{
+	"selector": "source.toml",
+	"command": [
+		"${storage_path}/LSP-pyproject/pyproject", "server"
+	],
+}
