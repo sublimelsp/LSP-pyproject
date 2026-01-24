@@ -7,7 +7,6 @@ from LSP.plugin import unregister_plugin
 from pathlib import Path
 from typing import cast, final
 from typing_extensions import override
-import os
 import shutil
 import sublime
 import tarfile
@@ -49,8 +48,8 @@ class LspPyproject(AbstractPlugin):
         return 'pyproject'
 
     @classmethod
-    def basedir(cls) -> str:
-        return os.path.join(cls.storage_path(), str(__package__))
+    def basedir(cls) -> Path:
+        return Path(cls.storage_path()) / str(__package__)
 
     @classmethod
     def server_version(cls) -> str:
@@ -58,7 +57,7 @@ class LspPyproject(AbstractPlugin):
 
     @classmethod
     def current_server_version(cls) -> str:
-        with open(os.path.join(cls.basedir(), "VERSION"), "r") as fp:
+        with open(cls.basedir() / "VERSION", "r") as fp:
             return fp.read()
 
     @classmethod
@@ -79,15 +78,15 @@ class LspPyproject(AbstractPlugin):
     @override
     def install_or_update(cls) -> None:
         try:
-            if os.path.isdir(cls.basedir()):
+            if cls.basedir().is_dir():
                 shutil.rmtree(cls.basedir())
-            os.makedirs(cls.basedir(), exist_ok=True)
+            cls.basedir().mkdir(exist_ok=True)
             version = cls.server_version()
             is_windows = sublime.platform() == "windows"
             extension = "zip" if is_windows else "tar.gz"
-            archive_file = os.path.join(cls.basedir(), f"artifact.{extension}")
+            archive_file = cls.basedir() / f"artifact.{extension}"
             server_binary_filename = "pyproject.exe" if is_windows else "pyproject"
-            server_binary_path = os.path.join(cls.basedir(), server_binary_filename)
+            server_binary_path = cls.basedir() / server_binary_filename
             url = ARTIFACT_URL.format(tag=TAG, filename=get_artifact_name())
             with urllib.request.urlopen(url) as fp:
                 with open(archive_file, "wb") as f:
@@ -102,9 +101,9 @@ class LspPyproject(AbstractPlugin):
                     if bad_members:
                         raise Exception(f'{archive_file} appears to be malicious, bad filenames: {bad_members}')
                     fp.extractall(cls.basedir())
-            os.remove(archive_file)
-            os.chmod(server_binary_path, 0o744)
-            with open(os.path.join(cls.basedir(), "VERSION"), "w") as fp:
+            archive_file.unlink()
+            server_binary_path.chmod(0o744)
+            with open(cls.basedir() / "VERSION", "w") as fp:
                 fp.write(version)
         except BaseException:
             shutil.rmtree(cls.basedir(), ignore_errors=True)
