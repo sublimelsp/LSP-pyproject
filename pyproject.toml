@@ -3,3 +3,4 @@ target-version = "py38"
 
 [tool.pyright]
 pythonVersion = "3.8"
+reportUnusedCallResult = "none"

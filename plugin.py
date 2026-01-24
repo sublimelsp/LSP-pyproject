@@ -1,10 +1,11 @@
 from __future__ import annotations
+from http.client import HTTPResponse
 from LSP.plugin import AbstractPlugin
 from LSP.plugin import ClientConfig
 from LSP.plugin import register_plugin
 from LSP.plugin import unregister_plugin
 from pathlib import Path
-from typing import final
+from typing import cast, final
 from typing_extensions import override
 import os
 import shutil
@@ -14,32 +15,28 @@ import urllib.request
 import zipfile
 
 
-SESSION_NAME = "LSP-pyproject"
-
 TAG = "0.1.2"
-"""
-Update this single git tag to download a newer version.
-"""
+ARTIFACT_URL = "https://github.com/terror/pyproject/releases/download/{tag}/{filename}"
+ARTIFACT_ARCH_MAPPING = {
+    'x64': 'x86_64',
+    'arm64': 'aarch64',
+    'x32': False,
+}
+ARTIFACT_PLATFORM_MAPPING = {
+    'windows': 'pc-windows-msvc',
+    'osx': 'apple-darwin',
+    'linux': 'unknown-linux-gnu',
+}
 
-URL = "https://github.com/terror/pyproject/releases/download/{tag}/pyproject-{tag}-{arch}-{platform}.{ext}"
-
-
-def arch() -> str:
-    if sublime.arch() == "x64":
-        return "x86_64"
-    if sublime.arch() == "x32":
-        raise RuntimeError("Unsupported platform: 32-bit is not supported")
-    if sublime.arch() == "arm64":
-        return "aarch64"
-    raise RuntimeError("Unknown architecture: " + sublime.arch())
-
-
-def platform() -> str:
-    if sublime.platform() == "windows":
-        return "pc-windows-msvc"
-    if sublime.platform() == "osx":
-        return "apple-darwin"
-    return "unknown-linux-gnu"
+def get_artifact_name() -> str:
+    sublime_arch = sublime.arch()
+    arch = ARTIFACT_ARCH_MAPPING[sublime_arch]
+    if arch is False:
+        raise RuntimeError(f'Unsupported architecture: {sublime_arch}')
+    sublime_platform = sublime.platform()
+    platform = ARTIFACT_PLATFORM_MAPPING[sublime_platform]
+    extension = 'zip' if sublime_platform == 'windows' else 'tar.gz'
+    return f'pyproject-{TAG}-{arch}-{platform}.{extension}'
 
 
 @final
@@ -87,26 +84,23 @@ class LspPyproject(AbstractPlugin):
             version = cls.server_version()
             is_windows = sublime.platform() == "windows"
             extension = "zip" if is_windows else "tar.gz"
-            url = URL.format(tag=TAG, arch=arch(), platform=platform(), ext=extension)
-            archive_file = os.path.join(cls.basedir(), f"pyproject.{extension}")
+            archive_file = os.path.join(cls.basedir(), f"artifact.{extension}")
             server_binary_filename = "pyproject.exe" if is_windows else "pyproject"
             server_binary_path = os.path.join(cls.basedir(), server_binary_filename)
+            url = ARTIFACT_URL.format(tag=TAG, filename=get_artifact_name())
             with urllib.request.urlopen(url) as fp:
                 with open(archive_file, "wb") as f:
-                    f.write(fp.read())
+                    f.write(cast(HTTPResponse, fp).read())
             if is_windows:
                 with zipfile.ZipFile(archive_file, "r") as zip_ref:
                     zip_ref.extract(server_binary_filename, cls.basedir())
             else:
                 with tarfile.open(archive_file) as fp:
                     names = fp.getnames()
-                    install_dir, _ = next(x for x in names if '/' in x).split('/', 1)
                     bad_members = [x for x in names if x.startswith('/') or x.startswith('..')]
                     if bad_members:
                         raise Exception(f'{archive_file} appears to be malicious, bad filenames: {bad_members}')
                     fp.extractall(cls.basedir())
-                    # with chdir(cls.basedir()):
-                    #     os.rename(install_dir, 'node')
             os.remove(archive_file)
             os.chmod(server_binary_path, 0o744)
             with open(os.path.join(cls.basedir(), "VERSION"), "w") as fp:
