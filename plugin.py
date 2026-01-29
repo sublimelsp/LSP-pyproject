@@ -86,7 +86,6 @@ class LspPyproject(AbstractPlugin):
             extension = "zip" if is_windows else "tar.gz"
             archive_file = cls.basedir() / f"artifact.{extension}"
             server_binary_filename = "pyproject.exe" if is_windows else "pyproject"
-            server_binary_path = cls.basedir() / server_binary_filename
             url = ARTIFACT_URL.format(tag=TAG, filename=get_artifact_name())
             with urllib.request.urlopen(url) as fp:
                 with open(archive_file, "wb") as f:
@@ -102,7 +101,6 @@ class LspPyproject(AbstractPlugin):
                         raise Exception(f'{archive_file} appears to be malicious, bad filenames: {bad_members}')
                     fp.extractall(cls.basedir())
             archive_file.unlink()
-            server_binary_path.chmod(0o744)
             with open(cls.basedir() / "VERSION", "w") as fp:
                 fp.write(version)
         except BaseException:
