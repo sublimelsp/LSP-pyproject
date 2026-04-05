@@ -1,18 +1,19 @@
 from __future__ import annotations
+
 from http.client import HTTPResponse
 from LSP.plugin import AbstractPlugin
 from LSP.plugin import ClientConfig
 from LSP.plugin import register_plugin
 from LSP.plugin import unregister_plugin
 from pathlib import Path
-from typing import cast, final
+from typing import cast
+from typing import final
 from typing_extensions import override
 import shutil
 import sublime
 import tarfile
 import urllib.request
 import zipfile
-
 
 TAG = "0.1.2"
 ARTIFACT_URL = "https://github.com/terror/pyproject/releases/download/{tag}/{filename}"
