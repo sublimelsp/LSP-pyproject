@@ -1,6 +1,13 @@
 {
 	"selector": "source.toml",
 	"command": [
-		"${storage_path}/LSP-pyproject/pyproject", "server"
+		"${storage_path}/LSP-pyproject/pyproject",
+		"server"
 	],
+	// Server-provided trigger characters cause more harm than good.
+	"disabled_capabilities": {
+		"completionProvider": {
+			"triggerCharacters": true
+		}
+	}
 }
