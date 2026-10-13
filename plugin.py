@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from http.client import HTTPResponse
-from LSP.plugin import AbstractPlugin
-from LSP.plugin import ClientConfig
-from LSP.plugin import register_plugin
-from LSP.plugin import unregister_plugin
+from LSP.plugin import IsApplicableContext
+from LSP.plugin import LspPlugin
+from LSP.plugin import OnPreStartContext
 from pathlib import Path
 from typing import cast
 from typing import final
@@ -41,16 +40,17 @@ def get_artifact_name() -> str:
 
 
 @final
-class LspPyproject(AbstractPlugin):
+class LspPyproject(LspPlugin):
 
     @classmethod
     @override
-    def name(cls) -> str:
-        return 'pyproject'
+    def on_pre_start_async(cls, context: OnPreStartContext) -> None:
+        if cls.needs_update_or_installation():
+            cls.install_or_update()
 
     @classmethod
     def basedir(cls) -> Path:
-        return Path(cls.storage_path()) / str(__package__)
+        return cls.plugin_storage_path
 
     @classmethod
     def server_version(cls) -> str:
@@ -63,12 +63,11 @@ class LspPyproject(AbstractPlugin):
 
     @classmethod
     @override
-    def is_applicable(cls, view: sublime.View, config: ClientConfig) -> bool:
-        is_applicable = super().is_applicable(view, config)
-        return is_applicable and bool(filename := view.file_name()) and Path(filename).name == 'pyproject.toml'
+    def is_applicable_async(cls, context: IsApplicableContext) -> bool:
+        is_applicable = super().is_applicable_async(context)
+        return is_applicable and bool(filename := context.view.file_name()) and Path(filename).name == 'pyproject.toml'
 
     @classmethod
-    @override
     def needs_update_or_installation(cls) -> bool:
         try:
             return cls.server_version() != cls.current_server_version()
@@ -76,7 +75,6 @@ class LspPyproject(AbstractPlugin):
             return True
 
     @classmethod
-    @override
     def install_or_update(cls) -> None:
         try:
             if cls.basedir().is_dir():
@@ -110,8 +108,8 @@ class LspPyproject(AbstractPlugin):
 
 
 def plugin_loaded() -> None:
-    register_plugin(LspPyproject)
+    LspPyproject.register()
 
 
 def plugin_unloaded() -> None:
-    unregister_plugin(LspPyproject)
+    LspPyproject.unregister()
