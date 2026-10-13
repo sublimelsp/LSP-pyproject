@@ -79,7 +79,7 @@ class LspPyproject(LspPlugin):
         try:
             if cls.basedir().is_dir():
                 shutil.rmtree(cls.basedir())
-            cls.basedir().mkdir(exist_ok=True)
+            cls.basedir().mkdir(parents=True, exist_ok=True)
             version = cls.server_version()
             is_windows = sublime.platform() == "windows"
             extension = "zip" if is_windows else "tar.gz"
