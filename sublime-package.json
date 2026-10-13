@@ -36,7 +36,7 @@
               "properties": {
                 "LSP": {
                   "properties": {
-                    "pyproject": {
+                    "LSP-pyproject": {
                       "$ref": "sublime://settings/LSP-pyproject#/definitions/PluginConfig"
                     }
                   }

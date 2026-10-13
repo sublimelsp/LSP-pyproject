@@ -1,7 +1,5 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/sublimelsp/lsp_smoke_test/v1/smoke.schema.json
 file: pyproject.toml
-# The session name until the package is migrated to LspPlugin.
-server: pyproject
 # The version must be a string.
 expected_diagnostics:
   min_count: 1
