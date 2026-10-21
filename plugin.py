@@ -14,7 +14,7 @@ import tarfile
 import urllib.request
 import zipfile
 
-TAG = "0.1.2"
+TAG = "0.1.3"
 ARTIFACT_URL = "https://github.com/terror/pyproject/releases/download/{tag}/{filename}"
 ARTIFACT_ARCH_MAPPING = {
     'x64': 'x86_64',
